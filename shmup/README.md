@@ -1,0 +1,1 @@
+This is a game where the player shoots down astroids from the sky
