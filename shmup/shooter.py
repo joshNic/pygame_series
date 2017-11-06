@@ -159,6 +159,7 @@ class Bullet(pygame.sprite.Sprite):
 
 
 class Explosion(pygame.sprite.Sprite):
+    """This is the explosions class"""
     def __init__(self, center, size):
         pygame.sprite.Sprite.__init__(self)
         self.size = size
