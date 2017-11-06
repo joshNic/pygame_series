@@ -4,6 +4,7 @@
       <w>astroids</w>
       <w>centerx</w>
       <w>keystate</w>
+      <w>newmob</w>
       <w>pygame</w>
       <w>speedx</w>
     </words>
