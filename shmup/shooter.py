@@ -1,10 +1,15 @@
 # Shooter Game
+""" Frozen Jam by tgfcoder <https://twitter.com/tgfcoder> licensed under CC-BY-3 
+<http://creativecommons.org/licenses/by/3.0/>"""
+# Art from kenny.nl
+
 import random
 from os import path
 
 import pygame
 
 img_dir = path.join(path.dirname(__file__), 'img')
+sound_dir = path.join(path.dirname(__file__), 'sound')
 
 
 WIDTH = 480
@@ -64,6 +69,7 @@ class Player(pygame.sprite.Sprite):
         bullet = Bullet(self.rect.centerx, self.rect.bottom)
         all_sprites.add(bullet)
         bullets.add(bullet)
+        shoot_sound.play()
 
 
 class Mob(pygame.sprite.Sprite):
@@ -124,6 +130,16 @@ class Bullet(pygame.sprite.Sprite):
             self.kill()
 
 
+# load game sounds
+pygame.mixer.music.load(path.join(sound_dir, "frozen.ogg"))
+pygame.mixer.music.set_volume(0.4)
+shoot_sound = pygame.mixer.Sound(path.join(sound_dir, "bullet_sound.wav"))
+explosion_sounds = []
+explode_sound = [
+    'epl2.wav', 'epl3.wav', 'epl4.wav', 'epl7.wav'
+]
+for sound in explode_sound:
+    explosion_sounds.append(pygame.mixer.Sound(path.join(sound_dir, sound)))
 # load all game graphics
 background = pygame.image.load(path.join(img_dir, "spacebg.png")).convert()
 background_rect = background.get_rect()
@@ -151,6 +167,7 @@ for i in range(8):
 
 score = 0
 
+pygame.mixer.music.play(loops=-1)
 
 # Game loop
 running = True
@@ -172,6 +189,7 @@ while running:
     hits = pygame.sprite.groupcollide(mobs, bullets, True, True)
     for hit in hits:
         score += 50 - hit.radius
+        random.choice(explosion_sounds).play()
         m = Mob()
         all_sprites.add(m)
         mobs.add(m)
