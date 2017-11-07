@@ -86,6 +86,8 @@ class Player(pygame.sprite.Sprite):
         self.lives = 3
         self.hidden = False
         self.hide_timer = pygame.time.get_ticks()
+        self.level = 1
+        self.powerup_timer = pygame.time.get_ticks()
 
     def update(self):
         # unhide if hidden
@@ -182,6 +184,23 @@ class Bullet(pygame.sprite.Sprite):
             self.kill()
 
 
+class Pow(pygame.sprite.Sprite):
+    def __init__(self, center):
+        pygame.sprite.Sprite.__init__(self)
+        self.type = random.choice(['sheild', 'gun'])
+        self.image = powerup_images[self.type]
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        self.speedy = 4
+
+    def update(self):
+        self.rect.y += self.speedy
+        # destroy the bullet if it goes off screen
+        if self.rect.top > HEIGHT:
+            self.kill()
+
+
 class Explosion(pygame.sprite.Sprite):
     """This is the explosions class"""
     def __init__(self, center, size):
@@ -259,11 +278,14 @@ for i in range(9):
     # img_lg = pygame.transform.scale(img, (75, 75))
     explosion_anim['player'].append(img)
 
-
+powerup_images = {}
+powerup_images['sheild'] = pygame.image.load(path.join(img_dir, 'shield_gold.png'))
+powerup_images['gun'] = pygame.image.load(path.join(img_dir, 'bolt_gold.png'))
 
 all_sprites = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
+powerup = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
 for i in range(8):
@@ -296,6 +318,10 @@ while running:
         random.choice(explosion_sounds).play()
         expl = Explosion(hit.rect.center, 'lg')
         all_sprites.add(expl)
+        if random.random() > 0.8:
+            pow = Pow(hit.rect.center)
+            all_sprites.add(pow)
+            powerup.add(pow)
         newmob()
 
     # check for collision
@@ -307,12 +333,21 @@ while running:
         newmob()
 
         if player.shield <= 0:
-            player_die_sound.play()
+            player_die_sound
             death_explosion = Explosion(player.rect.center, 'player')
             all_sprites.add(death_explosion)
             player.hide()
             player.lives -= 1
             player.shield = 100
+
+    hits = pygame.sprite.spritecollide(player, powerup, True)
+    for hit in hits:
+        if hit.type == 'shield':
+            player.shield += random.randrange(10, 30)
+            if player.shield >= 100:
+                player.shield = 100
+        if hit.type == 'gun':
+            player.powerup()
 
     # if player died and explosion has finished playing
     if player.lives == 0 and not death_explosion.alive():
