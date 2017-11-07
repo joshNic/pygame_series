@@ -15,6 +15,7 @@ sound_dir = path.join(path.dirname(__file__), 'sound')
 WIDTH = 480
 HEIGHT = 600
 FPS = 60
+POWERUP_TIMER = 5000
 
 # define colors
 WHITE = (255, 255, 255)
@@ -86,10 +87,14 @@ class Player(pygame.sprite.Sprite):
         self.lives = 3
         self.hidden = False
         self.hide_timer = pygame.time.get_ticks()
-        self.level = 1
+        self.power = 1
         self.powerup_timer = pygame.time.get_ticks()
 
     def update(self):
+        # check for powerup
+        if self.power >= 2 and pygame.time.get_ticks() - self.powerup_timer > POWERUP_TIMER:
+            self.power -= 1
+            self.powerup_timer = pygame.time.get_ticks()
         # unhide if hidden
         if self.hidden and pygame.time.get_ticks() - self.hide_timer > 1000:
             self.hidden = False
@@ -109,14 +114,31 @@ class Player(pygame.sprite.Sprite):
         if self.rect.left < 0:
             self.rect.left = 0
 
+    def powerup(self):
+        self.power += 1
+        self.powerup_timer = pygame.time.get_ticks()
+
+
     def shoot(self):
         now = pygame.time.get_ticks()
         if now - self.last_shot > self.shoot_delay:
             self.last_shot = now
-            bullet = Bullet(self.rect.centerx, self.rect.bottom)
-            all_sprites.add(bullet)
-            bullets.add(bullet)
-            shoot_sound.play()
+            if self.power == 1:
+                bullet = Bullet(self.rect.centerx, self.rect.bottom)
+                all_sprites.add(bullet)
+                bullets.add(bullet)
+                shoot_sound.play()
+
+            if self.power >= 2:
+                bullet1 = Bullet(self.rect.left, self.rect.centery)
+                bullet2 = Bullet(self.rect.right, self.rect.centery)
+                all_sprites.add(bullet1)
+                all_sprites.add(bullet2)
+                bullets.add(bullet1)
+                bullets.add(bullet1)
+                shoot_sound.play()
+
+
 
     def hide(self):
         # temporarily hide the player
@@ -231,6 +253,8 @@ class Explosion(pygame.sprite.Sprite):
 pygame.mixer.music.load(path.join(sound_dir, "frozen.ogg"))
 pygame.mixer.music.set_volume(0.4)
 shoot_sound = pygame.mixer.Sound(path.join(sound_dir, "bullet_sound.wav"))
+shield_sound = pygame.mixer.Sound(path.join(sound_dir, "Powerup7.wav"))
+power_sound = pygame.mixer.Sound(path.join(sound_dir, "Powerup4.wav"))
 explosion_sounds = []
 explode_sound = [
     'epl2.wav', 'epl3.wav', 'epl4.wav', 'epl7.wav'
@@ -344,10 +368,13 @@ while running:
     for hit in hits:
         if hit.type == 'shield':
             player.shield += random.randrange(10, 30)
+
             if player.shield >= 100:
                 player.shield = 100
+            shield_sound.play()
         if hit.type == 'gun':
             player.powerup()
+            power_sound.play()
 
     # if player died and explosion has finished playing
     if player.lives == 0 and not death_explosion.alive():
